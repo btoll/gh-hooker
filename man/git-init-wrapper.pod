@@ -1,0 +1,21 @@
+=head1 NAME
+
+git-init-wrapper - A wrapper around `git init` that also optionally install git pre-commit hooks and files such as `LICENSE`.
+
+=head1 SYNOPSIS
+
+git init-wrapper [ -d, --dir new_git_dir] [ -t, --hooks go,py,_ ]
+
+=head1 EXAMPLES
+
+git init-wrapper
+    - Doesn't install hooks, just LICENSE and other bootstrap files.
+
+git init-wrapper --hooks go,_
+    - Copies all hooks from the `$GIT_HOOKS/go/` and `$GIT_HOOKS/_/` directories, LICENSE and other bootstrap files.
+    - Asks for confirmation for each pre-commit hook to install.
+
+=head1 AUTHOR
+
+Benjamin Toll <ben@benjamintoll.com>
+

@@ -1,0 +1,141 @@
+#!/bin/bash
+#
+# http://stackoverflow.com/a/15802301
+#
+# Note that if listing a directory, Git Hub will replace the word
+# 'blob' in the url with 'tree', e.g.:
+#
+# https://github.com/btoll/git/blob/master/bin
+# becomes
+# https://github.com/btoll/git/tree/master/bin
+#
+# and vice-versa if viewing a file (i.e., 'tree' => 'blob').
+#
+
+set -o pipefail
+
+ARCH=$(uname)
+BLAME=false
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+FILE=
+GET_HASH=
+HASH=
+RANGE=
+REL_PATH=
+REMOTE_BRANCH=
+TOKEN=
+URL=
+
+if git rev-parse --is-inside-git-dir = true; then
+    echo "[ERROR]: Object is inside \`.git\` directory, exiting..."
+    exit 1
+fi
+
+if git rev-parse --is-inside-work-tree = false; then
+    echo "[ERROR]: Object is not under version control, exiting..."
+    exit 1
+fi
+
+usage() {
+    echo "GIT-HUB"
+    echo
+    echo "Usage: $0 [args]"
+    echo
+    echo "Args:"
+    echo "--blame        If given will open the branch in the Blame view."
+    echo "               Not applicable if given a topic branch or hash."
+    echo
+    echo "--branch, -b   The branch to use as the base lookup branch on GitHub."
+    echo
+    echo "--file, -f     The file to lookup on GitHub. Accepts relative paths."
+    echo
+    echo "--get-hash     A branch name can be given instead of a hash. If so,"
+    echo "               this flag will get the hash of the branch, tag, etc."
+    echo "               For example:"
+    echo
+    echo "                   git hub --get-hash MY_COOL_TOPIC_BRANCH"
+    echo "                   git hub --get-hash MY_TAG"
+    echo
+    echo "--hash         The commit hash to lookup on GitHub."
+    echo
+    echo "-h             Help."
+    echo
+    echo "--range        Specify in the format 'L10-L20' to highlight a visual range"
+    echo "               on GitHub."
+    echo
+}
+
+setGitHubUrl() {
+    GITHUB_URL=$(git ls-remote --get-url)
+
+    # If $GITHUB_URL begins with "git", i.e., git@github.com:btoll/utley
+    if [[ "$GITHUB_URL" == git* ]]; then
+        # Replaces first match of ":" with "/".
+        URL=${GITHUB_URL/://}
+
+        # Replaces first match of "git@" with "https://".
+        URL=${URL/git@/https://}
+    fi
+
+    # If $URL ends with ".git", i.e., btoll/stymie.git
+    if [[ "$URL" == *.git ]]; then
+        # Cut ".git"
+        URL=${URL%.git}
+    fi
+}
+
+# Swap out for user-provided options if given.
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --blame) BLAME=true ;;
+        --branch|-b) shift; REMOTE_BRANCH=$1 ;;
+        --file|-f) shift; FILE=$1 ;;
+        --get-hash) shift; GET_HASH=$1 ;;
+        --hash) shift; HASH=$1 ;;
+        -h) usage; exit 0 ;;
+        --range) shift; RANGE=$1 ;;
+    esac
+    shift
+done
+
+setGitHubUrl
+
+if [[ ( -n "$HASH" ) || ( -n "$GET_HASH" ) ]]; then
+    # If given a branch name or tag, simply get its hash.
+    if [[ -n "$GET_HASH" ]]; then
+        HASH=$(git rev-parse "$GET_HASH")
+    fi
+
+    URL+="/commit/$HASH"
+else
+    # Get the path of the cwd relative to the top-level dir.
+    REL_PATH=$(git rev-parse --show-prefix)
+
+    if [ -n "$FILE" ]; then
+        REL_PATH+="$FILE"
+    fi
+
+    if [[ -n "$REMOTE_BRANCH" ]]; then
+        BRANCH="$REMOTE_BRANCH"
+    fi
+
+    # If the relative path is empty, then we know that it's the top-level dir.
+    # In this case, don't futz with the url.
+    if [ -n "$REL_PATH" ]; then
+        TOKEN=$($BLAME && echo "blame" || echo "blob")
+        URL+="/$TOKEN/$BRANCH/$REL_PATH"
+    fi
+fi
+
+if [ -n "$RANGE" ]; then
+    URL+="#$RANGE"
+fi
+
+echo "$URL"
+
+if [ "$ARCH" == "Linux" ]; then
+    xdg-open "$URL" 2> /dev/null
+else
+    open "$URL" 2> /dev/null
+fi
+
