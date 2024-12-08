@@ -1,0 +1,58 @@
+#!/bin/bash
+
+set -eo pipefail
+
+HOOKS=
+GIT_DIR=
+
+usage() {
+    printf "git-init-wrapper
+
+Usage: git init-wrapper [args]
+
+Args:
+--dir,   -d   If provided, the directory in which git will be initiated.
+--help,  -h   Help.
+--hooks, -t   Comma-separated string of directory names that hold the
+              hooks to be installed.
+--yes,   -y   Answer 'yes' to all installs.\n"
+}
+
+if [ "$#" -gt 0 ]; then
+    while [ "$#" -gt 0 ]; do
+        OPT="$1"
+        case "$OPT" in
+            --dir|-d) shift; GIT_DIR="$1" ;;
+            --hooks|-t) shift; HOOKS="$1" ;;
+            --help|-h) usage; exit 0 ;;
+            --yes|-y) YES=1 ;;
+            *) printf "%b Unrecognized option \`%s\`.\n" "$ERROR" "$OPT"; usage; exit 1 ;;
+        esac
+        shift
+    done
+fi
+
+PROJECT_DIR="${GIT_DIR:-$(pwd)}"
+if [ ! -d "$PROJECT_DIR" ]
+then
+    mkdir -p "$PROJECT_DIR"
+fi
+
+git init "$PROJECT_DIR"
+git bootstrap --dir "$PROJECT_DIR"
+
+if [ -n "$HOOKS" ]
+then
+    # `git-hooks` expects to be run from the root of the project dir.
+    pushd "$PROJECT_DIR" > /dev/null
+    if [[ "$YES" -eq 1 ]]
+    then
+        git hooks --type "$HOOKS" --yes
+    else
+        git hooks --type "$HOOKS"
+    fi
+    popd > /dev/null
+else
+    printf "%b No git hooks installed.\n" "$INFO"
+fi
+

@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# This will copy all selected hooks found within the directories given by the `--hook`
+# options.  The installation refers to adding them to the git config.  The user will
+# be queried for each one (yes or no).
+
+set -eo pipefail
+
+usage() {
+    printf "git-hooks
+
+Usage: git hooks --hooks TYPES
+
+Args:
+--clean       Before installing any hooks, delete .git/hooks/pre-commit*
+--help,  -h   Help.
+--type,  -t   Comma-separated string of directory names that hold the
+              hooks to be installed.
+              Types: go, js, py, _ (misc)\n
+--yes,   -y   Answer 'yes' to all installs."
+}
+
+install() {
+    local hook="$1"
+    local hook_name="$2"
+    cp "$hook" "$PRE_COMMIT_D"
+    git config --local --add hooks.pre-commit.hook "$hook_name"
+}
+
+if [ "$#" -gt 0 ]; then
+    while [ "$#" -gt 0 ]; do
+        OPT="$1"
+        case "$OPT" in
+            --clean) CLEAN=1 ;;
+            --help|-h) usage; exit 0 ;;
+            --type|-t) shift; HOOKS="$1" ;;
+            --yes|-y) YES=1 ;;
+            *) printf "%b Unrecognized option \`%s\`.\n" "$ERROR" "$OPT"; usage; exit 1 ;;
+        esac
+        shift
+    done
+fi
+
+if [ -z "$HOOKS" ] && [ -z "$CLEAN" ]
+then
+    printf "%b No hooks given.\n" "$ERROR"
+    usage
+    exit 1
+fi
+
+GIT_HOOKS="$HOME/.local/bin/gh-hooker/hooks"
+PRE_COMMIT_D=.git/hooks/pre-commit.d
+
+# Don't remove `pre-commit.sample`.
+if [ -n "$CLEAN" ]
+then
+    # TODO: This only allows deletion from root of project.
+    git config --local --remove-section hooks.pre-commit &> /dev/null
+    rm -rf .git/hooks/pre-commit{,.d}
+    exit 0
+fi
+
+# This is (possibly) the first time the script has been run.
+if [ ! -d "$PRE_COMMIT_D" ]
+then
+    mkdir -p "$PRE_COMMIT_D"
+    cp "$GIT_HOOKS/f.sh" "$PRE_COMMIT_D"
+    cp "$GIT_HOOKS/pre-commit" .git/hooks/
+fi
+
+IFS="," read -ra INCLUDES <<< "$HOOKS"
+for extension in "${INCLUDES[@]}"
+do
+    for hook in "$GIT_HOOKS/$extension/"*
+    do
+        hook_name="$(basename "$hook")"
+        if [[ "$YES" -eq 1 ]]
+        then
+            install "$hook" "$hook_name"
+        else
+            read -rp "Install $hook_name? [Y/n]: " key
+            if [ "$key" = "" ] || [ "$key" = "Y" ] || [ "$key" = "y" ]
+            then
+                install "$hook" "$hook_name"
+            fi
+        fi
+    done
+done
+
+printf "%b Installed git hooks into %s.\n" "$SUCCESS" "$PRE_COMMIT_D"
+

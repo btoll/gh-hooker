@@ -1,0 +1,107 @@
+#!/bin/bash
+# shellcheck disable=2016
+
+set -o pipefail
+
+CMD=
+COMMIT="HEAD"
+DIRTY=false
+GET_COMMITTED_FILES_CMD="git diff-tree --no-commit-id --name-only -r"
+PATTERN=
+VIM=
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+
+usage() {
+    printf "git-ls
+
+Usage: %s [args]
+
+Args:
+--commit, -c    Use this commit to determine which files are shown (defaults to HEAD).
+
+--dirty, -d     List the files that are currently staged and modified in the workspace.
+                If not specified, it will default to list the files that make up the
+                last commit (determined by \$COMMIT).
+
+--edit, -e      Open all listed files in Vim using:
+                    b = one window (just buffers)
+                    h = horizontally-split windows
+                    t = tabs
+                    v = vertically-split windows
+                    Defaults to 'b'.
+
+                Note that if a pattern is given that only the files that match this
+                pattern will be opened in Vim.
+
+--pattern, -p   Specify a pattern that will be used to search through all the files
+                that make up the commit.
+
+--recurse, -r   Get files from more than one commit.\n" "$0"
+}
+
+# Swap out for user-provided options if given.
+while [ "$#" -gt 0 ]; do
+    OPT="$1"
+    case "$OPT" in
+        --commit|-c) shift; COMMIT="$1" ;;
+        --dirty|-d) DIRTY=true ;;
+        --edit|-e)
+            shift
+            case "$1" in
+                b) VIM=" " ;;
+                h) VIM="-o" ;;
+                t) VIM="-p" ;;
+                v) VIM="-O" ;;
+                *) VIM=" " ;;
+            esac
+            ;;
+        -help|-h) usage; exit 0 ;;
+        --pattern|-p) shift; PATTERN="$1" ;;
+        --recurse|-r) shift; RECURSE="$1" ;;
+    esac
+    shift
+done
+
+if [ -n "$RECURSE" ] && [ "$RECURSE" -gt 0 ]; then
+#    Doing `git ls -r 3` will construct the following command behind the scenes:
+#
+#        (
+#         git diff-tree --no-commit-id --name-only -r HEAD ;
+#         git diff-tree --no-commit-id --name-only -r HEAD^ ;
+#         git diff-tree --no-commit-id --name-only -r HEAD^^ ;
+#        ) | sort | uniq
+#
+    COUNTER=0
+    GROUP="("
+    LEVEL=""
+
+    while [[ "$COUNTER" -lt "$RECURSE" ]]; do
+       GROUP+=" $GET_COMMITTED_FILES_CMD HEAD$LEVEL ;"
+       COUNTER+=1
+       LEVEL+="^"
+    done
+
+    CMD="$GROUP ) | sort | uniq"
+else
+    # To get a list of the files that differ from HEAD (both staged and modified).
+    if $DIRTY; then
+        CMD="git diff-index --name-only $COMMIT"
+    else
+        CMD="$GET_COMMITTED_FILES_CMD $COMMIT"
+    fi
+fi
+
+if [ -n "$PATTERN" ]; then
+    # The `-l` switch only displays the file name.
+    # The `-w` switch only matches whole words.
+    CMD="$CMD | xargs ag -lw $PATTERN"
+fi
+
+if [ -n "$VIM" ]; then
+    CMD='vim '"$VIM"' $('"$CMD"')'
+fi
+
+cd "$PROJECT_ROOT" || exit
+eval "$CMD" 2> /dev/null
+
