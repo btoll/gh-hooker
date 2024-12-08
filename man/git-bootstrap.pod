@@ -1,0 +1,18 @@
+=head1 NAME
+
+git-bootstrap - Copy every file in $HOME/.local/share/gh-hooker/bootstrap into the git project directory.
+
+=head1 SYNOPSIS
+
+git bootstrap [ -d, --dir /path/to/git/repo ]
+
+=head1 EXAMPLES
+
+git bootstrap
+
+git bootstrap --dir $HOME/projects/foo
+
+=head1 AUTHOR
+
+Benjamin Toll <ben@benjamintoll.com>
+

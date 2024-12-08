@@ -1,0 +1,32 @@
+#!/bin/bash
+# shellcheck disable=1091
+
+. "$(git rev-parse --show-toplevel)/.git/hooks/pre-commit.d/f.sh"
+
+# Try for local hooks first.
+HOOKS=$(git config --local --get-all hooks.pre-commit.hook)
+
+if [ -z "$HOOKS" ]
+then
+    if [ -z "$PROJECT" ]
+    then
+        echo "[ERROR] No PROJECT name environment variable."
+        echo "This is needed to fetch the requisite global pre-commit hook."
+        exit 1
+    fi
+
+    HOOKS=$(git config --global --get-all hooks.pre-commit."$PROJECT")
+fi
+
+if [ -n "$HOOKS" ]
+then
+    for HOOK in $HOOKS
+    do
+        if ! bash "./.git/hooks/pre-commit.d/$HOOK"
+        then
+            echo -e "\n---\nTo skip all tests, do \`git commit --no-verify\`."
+            exit 1
+        fi
+    done
+fi
+
