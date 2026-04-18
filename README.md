@@ -5,9 +5,9 @@
     + [`git-hooks`](#git-hooks)
     + [`git-bootstrap`](#git-bootstrap)
 - [Installation](#installation)
-    + [`gh`](#gh)
     + [`podman`](#podman)
-    + [tar](#tar)
+    + [`tar`](#tar)
+    + [`gh`](#gh)
 - [Usage](#Usage)
 
 ---
@@ -50,27 +50,13 @@ Note that several of the files contain the placeholder `PROJECT_NAME`, which wil
 
 # Installation
 
-## `gh`
-
-```bash
-gh extension install btoll/gh-hooker
-```
-
-```bash
-gh hooker
-```
-
-This will copy custom Git extensions and Git hooks to `$HOME/.local/bin/gh-hooker`.  In addition, files that are common to all repositories of an organization are copied to `$HOME/.local/share/gh-hooker`.
-
-The hooks are configured locally.  The global `.gitconfig` is untouched.
-
 ## `podman`
 
 ```bash
 podman run --rm -v "$HOME/.local":/root/.local docker.io/btoll/gh-hooker:latest
 ```
 
-## tar
+## `tar`
 
 Create the tarball:
 
@@ -89,12 +75,26 @@ cp -r bootstrap "$HOME"/.local/share/gh-hooker/
 export PATH="$PATH":"$HOME"/.local/bin/gh-hooker/bin
 ```
 
+## [`gh`]
+
+```bash
+gh extension install btoll/gh-hooker
+```
+
+```bash
+gh hooker
+```
+
+This will copy custom Git extensions and Git hooks to `$HOME/.local/bin/gh-hooker`.  In addition, files that are common to all repositories of an organization are copied to `$HOME/.local/share/gh-hooker`.
+
+The hooks are configured locally.  The global `.gitconfig` is untouched.
+
 # Usage
 
 Initialize a new Git repository, copy bootstrap files to it and install Git hooks:
 
 ```bash
-git init-wrapper -d my-new-repo --hooks go
+git init-wrapper -d my-new-repo --hooks go --yes
 ```
 
 List the installed hooks:
@@ -153,4 +153,6 @@ ggshield install [OPTIONS]
 ```
 
 [ggshield install](https://docs.gitguardian.com/ggshield-docs/reference/install)
+
+[`gh`]: https://cli.github.com/
 
