@@ -40,7 +40,13 @@ Use this extension when installing Git hooks into an existing repository.
 
 ## `git-bootstrap`
 
-Use this extension when installing bootstrap files into an existing repository.
+Use this extension when installing bootstrap files into an existing repository.  It will install the following files:
+
+- `README.md`
+- `LICENSE`
+- `.gitignore`
+
+Note that several of the files contain the placeholder `PROJECT_NAME`, which will be replaced by the project name.
 
 # Installation
 
