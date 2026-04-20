@@ -1,0 +1,167 @@
+#!/bin/bash
+
+# TODO: Rollback any changes when there's a failure (i.e., any created tag(s)).
+
+CREATE=0
+DEBIAN_TAG=
+NO_RELEASE=0
+NO_SIGN=0
+REPO_LOCATION=
+REPO_NAME=
+TAG=
+
+usage() {
+    printf "git-package-and-release
+
+Usage: git package-and-release TAG_NAME
+
+Args:
+--create, -c    Create the tag specified by \`--tag\`.
+--help, -h      Help.
+--no-release    Package but don't release.  If running, this will turn off
+                the service that is watching the /srv/packages/ directory.
+--no-sign       Do not sign the tag when creating (signs by default).
+--tag, -t       The tag name.  Will do a \`git checkout\` on it, followed by
+                packaging the state of the repo and releasing it to GitHub.
+                If \`--create\` is specified, will first create the signed
+                new tag (unless \`--no-sign\` is given).
+
+Note that if signing the tags that the branch name will be used unless
+MESSAGE is not null.\n"
+}
+
+if [ "$#" -gt 0 ]; then
+    while [ "$#" -gt 0 ]; do
+        OPT="$1"
+        case "$OPT" in
+            --create|-c) CREATE=1 ;;
+            --help|-h) usage; exit 0 ;;
+            --no-release) NO_RELEASE=1 ;;
+            --no-sign) NO_SIGN=1 ;;
+            --tag|-t) shift; TAG="$1" ;;
+            *) printf "%b Unknown option \`%s\`.\n" "$ERROR" "$OPT"; usage; exit 1 ;;
+        esac
+        shift
+    done
+fi
+
+create_tag() {
+    local new_tag="$1"
+    local msg="${2:-$new_tag}"
+    local failed=0
+
+    if [ "$CREATE" -eq 1 ]
+    then
+        if [ "$NO_SIGN" -eq 1 ]
+        then
+            # Need to add --no-sign which overrides `tag.gpgSign`, in case it's set.
+            if ! git tag --no-sign "$new_tag" 2> /dev/null
+            then
+                failed=1
+            fi
+        else
+            if ! git tag --sign "$new_tag" --message "$msg" 2> /dev/null
+            then
+                failed=1
+            fi
+        fi
+        # TODO: If the user sends SIGINT when asked to sign they will get this error message, which
+        # clearly is wrong.  Should check the exit code and then display an appropriate error message.
+        if [ "$failed" -eq 1 ]
+        then
+            printf "%b Cowardly refusing to create tag \`%s\`, it already exists.\n" "$INFO" "$new_tag"
+        fi
+    elif [ "$CREATE" -eq 0 ] && [ "$NO_SIGN" -eq 1 ]
+    then
+        printf "%b Option \`--no-sign\` is meaningless when not creating a tag.\n" "$INFO"
+    fi
+}
+
+if ! git diff --exit-code --quiet
+then
+    printf "%b Git repository is dirty, aborting...\n" "$ERROR"
+    exit 1
+fi
+
+if [ -z "$TAG" ]
+then
+    printf "%b Must specify a tag name, exiting.\n" "$ERROR"
+    usage
+    exit 1
+fi
+
+# When signing, there are options to use for the tag message:
+#   1. Set MESSAGE in the calling environment.
+#   2. Use TAG, if MESSAGE isn't set.
+if [ "$NO_SIGN" -eq 0 ] && [ -z "$MESSAGE" ]
+then
+    printf "%b MESSAGE is null, using TAG for tag signing.\n" "$INFO"
+fi
+
+# First, checkout the master branch, because we need to tag the release.
+git checkout master &> /dev/null
+create_tag "$TAG" "$MESSAGE"
+git checkout "$TAG" &> /dev/null
+
+DEBIAN_TAG="debian/$TAG"
+
+# We only want to package in the `debian/master` branch.  Remember, `master`
+# doesn't contain the debian/ directory.
+git checkout debian/master &> /dev/null
+# Always be sure to merge first.
+git merge -s ours master &> /dev/null
+create_tag "$DEBIAN_TAG" "$MESSAGE"
+git checkout "$DEBIAN_TAG" &> /dev/null
+
+# Show the absolute path of the top-level directory of the working tree.
+REPO_LOCATION="$(git rev-parse --show-toplevel)"
+REPO_NAME=$(basename "$REPO_LOCATION")
+
+if [ "$NO_RELEASE" -eq 1 ]
+then
+    if ! sudo systemctl stop awesome-release.path
+    then
+        printf "do something here\n"
+    fi
+fi
+
+# The `build_deb.sh` script in the container will use the LOCAL var
+# to clone a local (to the filesystem) repo rather than a remote one.
+#
+# At some point, this may need to be configurable, but it's ok for
+# now because all of the source directories are on the same machine
+# as the build architecture.
+if ! sudo systemd-nspawn \
+    --machine deb-packaging \
+    --setenv PACKAGE_NAME="$REPO_NAME" \
+    --setenv PACKAGE_VERSION="$TAG" \
+    --setenv USER=1000 \
+    --setenv LOCAL=1 \
+    --bind-ro "$REPO_LOCATION":/clone \
+    --bind /srv/packages/deb:/build \
+    --bind /run/user/1000/gnupg/S.gpg-agent:/root/.gnupg/S.gpg-agent \
+    --quiet
+then
+    printf "do something here\n"
+fi
+
+# The service should always be on, because it was enabled.
+if ! sudo systemctl restart awesome-release.path
+then
+    printf "do something here\n"
+fi
+
+# TODO: Should this script get the branch name before checking out the tag
+# name and then restore it when the operation is complete?
+#
+# The following command will get the name of the current branch (empty when
+# in detached HEAD state):
+#
+#       git branch --show-current
+#
+# The old way (prior to 2.22) was:
+#
+#       git rev-parse --abbrev-ref HEAD
+#
+#git checkout master
+

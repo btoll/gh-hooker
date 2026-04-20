@@ -1,0 +1,154 @@
+#!/bin/bash
+# shellcheck disable=2143
+
+set -o pipefail
+
+BRANCH_SWITCH="--merged"
+BRANCHES=
+BUFFER=
+COUNTER=0
+DELETE_SWITCH="-d"
+DRY_RUN=
+FOUND=
+HEAD=$(git rev-parse --abbrev-ref HEAD)
+INTERACTIVE=
+INTERACTIVE_MSG="merged or empty"
+NO_REMOTE_DELETE=
+PATTERN="."
+REPO="origin"
+
+delete_branch() {
+    git branch "$DELETE_SWITCH" "$BRANCH"
+
+    if [ -z "$NO_REMOTE_DELETE" ]; then
+        git push "$REPO" :"$BRANCH"
+    fi
+}
+
+usage() {
+    echo "git-cleanup"
+    echo
+    echo "Usage: $0 [args]"
+    echo
+    echo "Args:"
+    echo "--file, -f            Specifies a file to which all of the deletion commands will be appended"
+    echo "                      (i.e., it is non-destructive). The file will then be executable."
+    echo "                      Will be created if it doesn't exist."
+    echo
+    echo "-i                    Interactive mode."
+    echo
+    echo "--dry-run, -l         Will operate in DRY RUN mode.  Will list all branches to be deleted."
+    echo "                      This is useful (and safe) when you are not sure which branches will"
+    echo "                      be removed by the filter."
+    echo
+    echo "--no-merged           Operate on unmerged branches instead."
+    echo
+    echo "--no-remote-delete    Don't delete the branch from the remote repository."
+    echo
+    echo "--pattern, -p         The regex to use for existing local branches."
+    echo "                      Defaults to '.'"
+    echo
+    echo "--repo, -r            The name of the remote repository from which to delete the branch."
+    echo "                      Defaults to 'origin'"
+}
+
+if [ "$#" -eq 0 ]; then
+    usage
+    exit 0
+fi
+
+# Swap out for user-provided options if given.
+while [ "$#" -gt 0 ]; do
+    OPT="$1"
+    case $OPT in
+        --file|-f) shift;
+            if [ -z "$1" ]; then
+                echo -e "$ERROR No file given."
+                exit 1
+            fi
+
+            FILE=$1
+            ;;
+        --help|-h) usage; exit 0 ;;
+        -i) INTERACTIVE=1 ;;
+        --dry-run|-l) DRY_RUN=1 ;;
+        --no-merged)
+            BRANCH_SWITCH="--no-merged"
+            DELETE_SWITCH="-D"
+            INTERACTIVE_MSG="unmerged"
+            ;;
+        --no-remote-delete) NO_REMOTE_DELETE=1 ;;
+        --pattern|-p) shift;
+            if [ -z "$1" ]; then
+                echo -e "$ERROR No pattern given."
+                exit 1
+            fi
+
+            PATTERN=$1
+            ;;
+        --repo|-r) shift; REPO=$1 ;;
+    esac
+    shift
+done
+
+# http://stackoverflow.com/a/3846451
+BRANCHES=$(git branch "$BRANCH_SWITCH" | cut -c 3-)
+
+echo "$(tput setaf 6)[MATCH PATTERN]$(tput sgr0) $PATTERN"
+
+if [ -n "$DRY_RUN" ]; then
+    echo " $(tput setaf 6)[DRY RUN MODE]$(tput sgr0) The following branches will be removed:"
+fi
+
+for BRANCH in $BRANCHES; do
+    # Let's operate on only the desired branches.
+    if [ "$(echo "$BRANCH" | grep -E "$PATTERN")" ]; then
+        FOUND=1
+
+        if [ -n "$DRY_RUN" ]; then
+            echo -e "\t$BRANCH"
+        elif [ -n "$FILE" ]; then
+            BUFFER[$COUNTER]="# $BRANCH"
+            COUNTER=$((COUNTER + 1))
+            BUFFER[$COUNTER]="git branch $DELETE_SWITCH $BRANCH"
+            COUNTER=$((COUNTER + 1))
+
+            if [ -z "$NO_REMOTE_DELETE" ]; then
+                BUFFER[$COUNTER]="git push $REPO :$BRANCH"
+                COUNTER=$((COUNTER + 1))
+            fi
+        else
+            if [ -n "$INTERACTIVE" ]; then
+                echo -e "\n\"$BRANCH\" contains the following $INTERACTIVE_MSG commits:"
+
+                # http://stackoverflow.com/a/4207176
+                git log "$BRANCH" ^"$HEAD" --no-merges
+
+                read -rp "Delete branch \"$BRANCH\"? [y/N/q] " CONTINUE
+
+                if [ "$CONTINUE" = "y" ]; then
+                    delete_branch
+                elif [ "$CONTINUE" = "q" ]; then
+                    echo "Exiting."
+                    exit 0
+                fi
+            else
+                delete_branch
+            fi
+        fi
+    fi
+done
+
+if [ -z "$DRY_RUN" ] && [ -n "$FILE" ]; then
+    # Write the entire buffer to the file...
+    printf "%s\n" "${BUFFER[@]}" >> "$FILE"
+    # ..and make it executable.
+    chmod 701 "$FILE"
+    echo -e "$SUCCESS Results written to $FILE."
+    exit 0
+fi
+
+if [ -z "$FOUND" ]; then
+    echo "  $(tput setaf 6)[GIT-CLEANUP]$(tput sgr0) No matches found."
+fi
+

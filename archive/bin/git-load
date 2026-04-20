@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Get up and running quickly with the versioned files that make up a commit.
+# If not given any arguments, `git-load` will assume the last commit.
+
+# Note the dependency on the `git-ls` extension:
+# https://github.com/btoll/git/blob/master/bin/git-ls
+
+# This script is just basically a nice front-end to `git ls`.
+
+set -o pipefail
+
+# Use sensible defaults.
+COMMIT="HEAD"
+# Only boostrapping the files of the last commit.
+RECURSE="0"
+# Use buffers with only one window view.
+VIM="b"
+
+usage() {
+    printf "git-load
+
+Usage: %s [args]
+
+Args:
+--commit, -c          The commit from which to get the files.
+--help                Help.
+--recurse, -r         Get files from more than one commit.
+--split, --sp, -h     Open files in Vim in a horizontal split.
+--tabs, --tab, -p     Open files in Vim in tabs.
+--vsplit, --vsp, -v   Open files in Vim in a vertical split.
+
+Note if no arguments are passed, the last commit will be assumed.\n" "$0"
+}
+
+if [ "$#" -gt 0 ]; then
+    while [ "$#" -gt 0 ]; do
+        OPT="$1"
+        case "$OPT" in
+            --commit|-c) shift; COMMIT="$1" ;;
+            --help) usage; exit 0 ;;
+            --recurse|-r) shift; RECURSE="$1" ;;
+            --split|--sp|-h) VIM="h" ;;
+            --tabs|--tab|-p) VIM="t" ;;
+            --vsplit|--vsp|-v) VIM="v" ;;
+        esac
+        shift
+    done
+fi
+
+git ls --edit "$VIM" --recurse "$RECURSE" --commit "$COMMIT"
+

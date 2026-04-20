@@ -1,0 +1,134 @@
+#!/bin/bash
+
+set -o pipefail
+
+# Delimiter.
+DELIMITER='|'
+FIELDS=("${BOLD}Hash (short)${OFF}    -> " "${BOLD}Author name${OFF}     -> " "${BOLD}Author email${OFF}    -> " "${BOLD}Commit message${OFF}  -> " "${BOLD}Merge date${OFF}      -> ")
+FILE=
+FORMAT=
+DELETE_FILE=true
+WEB=false
+PATTERN=
+PREV_IFS=
+TMP_FILE=
+GITHUB_URL=
+URL=
+
+usage() {
+    printf "git-log-grep
+
+Usage: %s [args]
+
+Args:
+--format                  The format passed internally to git log --pretty.
+                          Defaults to '%h %an %ae %s %cd'.
+
+--file, -file, -f         The location of the file or directory to search. Note that the
+                          more specific the location the faster the lookup. Default to the
+                          current working directory.
+
+--no-delete               The default is to delete the temporary CSV file used by the tool.
+                          Use this flag to override.
+
+--pattern, -pattern, -p   Specify a pattern (method) that will be the basis of the log:
+                          history search.
+
+--web, -w                 Open the commit on GitHub using the default browser.\n" "$0"
+}
+
+set_github_url() {
+    local url
+    url=$(git ls-remote --get-url)
+
+    # If $GITHUB_URL begins with "git", i.e., git@github.com:btoll/utley
+    if [[ "$url" == git* ]]; then
+        # Replaces first match of ":" with "/".
+        GITHUB_URL=${url/://}
+
+        # Replaces first match of "git@" with "https://".
+        GITHUB_URL=${GITHUB_URL/git@/https://}
+    fi
+
+    # If $GITHUB_URL ends with ".git", i.e., btoll/stymie.git
+    if [[ "$GITHUB_URL" == *.git ]]; then
+        # Cut ".git"
+        GITHUB_URL=${GITHUB_URL%.git}
+    fi
+}
+
+if [ $# -eq 0 ]
+then
+    usage
+    exit 0
+fi
+
+# Swap out for user-provided options if given.
+while [ "$#" -gt 0 ]; do
+    OPT="$1"
+    case $OPT in
+        --format) shift; FORMAT=$1 ;;
+        -help|-h) usage; exit 0 ;;
+        --file|-file|-f) shift; FILE=$1 ;;
+        --no-delete) DELETE_FILE=false ;;
+        --web|-w) WEB=true ;;
+        --pattern|-pattern|-p) shift; PATTERN=$1 ;;
+    esac
+    shift
+done
+
+FORMAT=${FORMAT:-"%h$DELIMITER%an$DELIMITER%ae$DELIMITER%s$DELIMITER%cd"}
+FILE=${FILE:=$(pwd)}
+TMP_FILE="$PATTERN.csv"
+
+# -G = Find modifications to $PATTERN in addition to added or removed lines that include $PATTERN.
+git log --pretty="$FORMAT" -G"$PATTERN" -- "$FILE" > "$TMP_FILE"
+wait
+
+# Save previous (global) IFS.
+PREV_IFS="$IFS"
+IFS="$DELIMITER"
+
+set_github_url
+
+while read -r LINE
+do
+    # Disable backslash escaping and read words into an array.
+    read -r -a ARR <<<"$LINE"
+
+    # We need to grab the hash to properly build the URL.
+    URL="$GITHUB_URL/commit/${ARR[0]}"
+
+    # Add the search pattern.
+    FIELDS[5]="${BOLD}Search pattern${OFF}  ->  $PATTERN"
+
+    # We can only now add the last array element now that we have the SHA from each search result.
+    FIELDS[6]="${BOLD}URL${OFF}             ->  $URL"
+
+    # For formatting between search results.
+    printf "\n"
+
+    # Get the index for each field to lookup the values in each array.
+    # http://www.linuxjournal.com/content/bash-arrays
+    for n in ${!FIELDS[*]}
+    do
+        printf "%s\n" "${FIELDS[n]} ${ARR[n]}"
+    done
+
+    if $WEB
+    then
+        xdg-open "$URL"
+    fi
+done < "$TMP_FILE"
+
+# Restore previous IFS.
+IFS="$PREV_IFS"
+
+# Add a final blank line for formatting, i.e., a blank line before the prompt.
+printf "\n"
+
+if $DELETE_FILE
+then
+    rm "$TMP_FILE"
+fi
+
