@@ -38,6 +38,28 @@ export NO_MATCH="${FG_RED}[NO MATCH]${FG_RED}${OFF}"
 export CHECK="[$FG_GREEN✓$OFF]"
 export CROSS="[$FG_RED✗$OFF]"
 
+augment_command() {
+    local subcommand=$1
+
+    if [ -n "$subcommand" ]
+    then
+        # Important to copy before re-assigning to `bin`.
+        cmd="$bin $subcommand"
+#        bin="${bin} ${subcommand}"
+    fi
+
+    echo "$cmd"
+}
+
+if_success() {
+    local exit_code=$1
+
+    if [ "$exit_code" -eq 0 ]
+    then
+        echo -e "$SUCCESS Completed successfully."
+    fi
+}
+
 is_installed() {
     local bin="$1"
 
@@ -49,32 +71,22 @@ is_installed() {
 }
 
 verify_all() {
-    local bin="$1"
-    local subcommand="$2"
-    local cmd="$bin"
+    local bin=$1
+    local subcommand=$2
+    local cmd=$bin
     local exit_code=0
 
     is_installed "$bin"
 
-    if [ -n "$subcommand" ]
-    then
-        # Important to copy before re-assigning to `bin`.
-        cmd="$bin $subcommand"
-        bin="${bin} ${subcommand}"
-    fi
-
-    echo -e "$INFO Running ${BOLD}${bin}${OFF} pre-commit hook..."
+    cmd=$(augment_command "$subcommand")
+    echo -e "$INFO Running ${BOLD}${cmd}${OFF}"
 
     if ! eval "$cmd"
     then
         exit_code=1
     fi
 
-    if [ $exit_code -eq 0 ]
-    then
-        echo -e "$SUCCESS Completed successfully."
-    fi
-
+    if_success $exit_code
     return $exit_code
 }
 
@@ -83,10 +95,10 @@ verify_all() {
 # 2 = regex to get changed files
 # 3 = subcommand (if different from program)
 verify_changed() {
-    local bin="$1"
-    local regex="$2"
-    local subcommand="$3"
-    local cmd="$bin"
+    local bin=$1
+    local regex=$2
+    local subcommand=$3
+    local cmd=$bin
     local exit_code=0
 
     is_installed "$bin"
@@ -101,14 +113,8 @@ verify_changed() {
 
     if [ -n "$FILES" ]
     then
-        if [ -n "$subcommand" ]
-        then
-            # Important to copy before re-assigning to `bin`.
-            cmd="$bin $subcommand"
-            bin="${bin} ${subcommand}"
-        fi
-
-        echo -e "$INFO Running ${BOLD}${bin}${OFF} pre-commit hook..."
+        cmd=$(augment_command "$subcommand")
+        echo -e "$INFO Running ${BOLD}${cmd}${OFF}"
 
         for file in $FILES
         do
@@ -118,15 +124,14 @@ verify_changed() {
             fi
         done
 
-        if [ $exit_code -eq 0 ]
-        then
-            echo -e "$SUCCESS Completed successfully."
-        fi
+        if_success $exit_code
     fi
 
     return $exit_code
 }
 
+export -f augment_command
+export -f if_success
 export -f is_installed
 export -f verify_all
 export -f verify_changed
