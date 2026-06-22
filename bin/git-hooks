@@ -48,7 +48,7 @@ then
     exit 1
 fi
 
-GIT_HOOKS="$HOME/.local/bin/gh-hooker/hooks"
+GIT_HOOKS="$HOME/.local/bin/git-hooks-and-extensions/hooks"
 PRE_COMMIT_D=.git/hooks/pre-commit.d
 
 # Don't remove `pre-commit.sample`.

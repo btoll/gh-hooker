@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Will copy every file from $HOME/.local/share/gh-hooker/bootstrap/ into either the cwd
+# Will copy every file from $HOME/.local/share/git-hooks-and-extensions/bootstrap/ into either the cwd
 # or, if given, the location pointed to be `--dir`.
 # Files copied will be `LICENSE`, `README.md`, et al.
 #
@@ -41,7 +41,7 @@ fi
 
 # Toggle to include hidden files in the filename expansion when globbing.
 shopt -s dotglob
-for file in "$HOME/.local/share/gh-hooker/bootstrap/"*
+for file in "$HOME/.local/share/git-hooks-and-extensions/bootstrap/"*
 do
     cp -i "$file" "$PROJECT_DIR"
     # This is matching against the absolute file name.

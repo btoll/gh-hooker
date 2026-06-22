@@ -1,4 +1,4 @@
-# `gh-hooker`
+# `git-hooks-and-extensions`
 
 - [About](#about)
     + [`git-init-wrapper`](#git-init-wrapper)
@@ -53,7 +53,7 @@ Note that several of the files contain the placeholder `PROJECT_NAME`, which wil
 ## `podman`
 
 ```bash
-podman run --rm -v "$HOME/.local":/root/.local docker.io/btoll/gh-hooker:latest
+podman run --rm -v "$HOME/.local":/root/.local docker.io/btoll/git-hooks-and-extensions:latest
 ```
 
 ## `tar`
@@ -61,18 +61,18 @@ podman run --rm -v "$HOME/.local":/root/.local docker.io/btoll/gh-hooker:latest
 Create the tarball:
 
 ```bash
-tar -cjf gh-hooker_0.1.0.bz2 --exclude .git gh-hooker
+tar -cjf git-hooks-and-extensions_0.1.0.bz2 --exclude .git git-hooks-and-extensions
 ```
 
 Unpack:
 
 ```bash
-tar -xjf gh-hooker_0.1.0.bz2
-cd gh-hooker
-mkdir -p "$HOME"/.local/{bin,share}/gh-hooker
-cp -r {bin,hooks} "$HOME"/.local/bin/gh-hooker/
-cp -r bootstrap "$HOME"/.local/share/gh-hooker/
-export PATH="$PATH":"$HOME"/.local/bin/gh-hooker/bin
+tar -xjf git-hooks-and-extensions_0.1.0.bz2
+cd git-hooks-and-extensions
+mkdir -p "$HOME"/.local/{bin,share}/git-hooks-and-extensions
+cp -r {bin,hooks} "$HOME"/.local/bin/git-hooks-and-extensions/
+cp -r bootstrap "$HOME"/.local/share/git-hooks-and-extensions/
+export PATH="$PATH":"$HOME"/.local/bin/git-hooks-and-extensions/bin
 ```
 
 ## [`gh`]
@@ -80,14 +80,14 @@ export PATH="$PATH":"$HOME"/.local/bin/gh-hooker/bin
 The structure of this repository is such that it allows for easily installation when using `gh`.
 
 ```bash
-gh extension install btoll/gh-hooker
+gh extension install btoll/git-hooks-and-extensions
 ```
 
 ```bash
-gh hooker
+git-hooks-and-extensions
 ```
 
-This will copy custom Git extensions and Git hooks to `$HOME/.local/bin/gh-hooker`.  In addition, files that are common to all repositories of an organization are copied to `$HOME/.local/share/gh-hooker`.
+This will copy custom Git extensions and Git hooks to `$HOME/.local/bin/git-hooks-and-extensions`.  In addition, files that are common to all repositories of an organization are copied to `$HOME/.local/share/git-hooks-and-extensions`.
 
 The hooks are configured locally.  The global `.gitconfig` is untouched.
 

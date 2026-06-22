@@ -10,7 +10,7 @@ COPY bin/ ./bin/
 COPY bootstrap/ ./bootstrap/
 COPY hooks/ ./hooks/
 COPY man/ ./man/
-COPY colors.sh gh-hooker ./
+COPY colors.sh git-hooks-and-extensions ./
 
-ENTRYPOINT ["./gh-hooker"]
+ENTRYPOINT ["./git-hooks-and-extensions"]
 

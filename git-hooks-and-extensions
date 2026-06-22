@@ -7,19 +7,19 @@ GH_DIR=.
 
 if type -p gh
 then
-    GH_DIR="$HOME/.local/share/gh/extensions/gh-hooker"
+    GH_DIR="$HOME/.local/share/gh/extensions/git-hooks-and-extensions"
 fi
 
 . "$GH_DIR/colors.sh"
 
-BINDIR="$HOME/.local/bin/gh-hooker"
+BINDIR="$HOME/.local/bin/git-hooks-and-extensions"
 mkdir -p "$BINDIR"
 echo -e "$INFO Installing git extensions into $BINDIR/bin..."
 cp -r "$GH_DIR/bin" "$BINDIR"
 echo -e "$INFO Installing git hooks into $BINDIR/hooks..."
 cp -r "$GH_DIR/hooks" "$BINDIR"
 
-SHARE_DIR="$HOME/.local/share/gh-hooker"
+SHARE_DIR="$HOME/.local/share/git-hooks-and-extensions"
 mkdir -p "$SHARE_DIR"
 echo -e "$INFO Installing git bootstrap files into $SHARE_DIR/bootstrap..."
 cp -r "$GH_DIR/bootstrap" "$SHARE_DIR"

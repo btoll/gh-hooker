@@ -1,6 +1,6 @@
 =head1 NAME
 
-git-bootstrap - Copy every file in $HOME/.local/share/gh-hooker/bootstrap into the git project directory.
+git-bootstrap - Copy every file in $HOME/.local/share/git-hooks-and-extensions/bootstrap into the git project directory.
 
 =head1 SYNOPSIS
 

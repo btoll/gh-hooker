@@ -7,7 +7,7 @@ set -euo pipefail
 
 echo -e "$INFO Removing symbolic links for git extensions..."
 echo -e "$INFO Removing symbolic links for git bootstrap files..."
-rm -rf "$HOME"/.local/{bin,share}/gh-hooker
+rm -rf "$HOME"/.local/{bin,share}/git-hooks-and-extensions
 
 MANDIR=/usr/share/man/man1
 echo -e "$INFO Removing git man pages..."
