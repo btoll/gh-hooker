@@ -1,12 +1,16 @@
 FROM debian:bookworm-slim
 
 RUN apt-get update && \
-    apt-get install -y \
-        git
+    apt-get install -y --no-install-recommends git && \
+    rm -rf /etc/apt/lists/*
 
-WORKDIR /root
+WORKDIR /app
 
-COPY . ./
+COPY bin/ ./bin/
+COPY bootstrap/ ./bootstrap/
+COPY hooks/ ./hooks/
+COPY man/ ./man/
+COPY colors.sh gh-hooker ./
 
 ENTRYPOINT ["./gh-hooker"]
 
