@@ -5,5 +5,5 @@ set -eo pipefail
 LANG=C
 umask 0022
 
-verify_all golangci-lint run
+verify_all gosec ./...
 

@@ -9,5 +9,5 @@ umask 0022
 # 1 = program
 # 2 = regex to get changed files
 # 3 = subcommand (if different from program)
-verify vagrant Vagrantfile validate
+verify_changed vagrant Vagrantfile validate
 

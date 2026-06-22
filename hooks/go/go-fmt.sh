@@ -9,5 +9,5 @@ umask 0022
 # 1 = program
 # 2 = regex to get changed files
 # 3 = subcommand (if different from program)
-verify go "\.go$" fmt
+verify_changed go "\.go$" fmt
 

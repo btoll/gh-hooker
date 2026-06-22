@@ -77,6 +77,8 @@ export PATH="$PATH":"$HOME"/.local/bin/gh-hooker/bin
 
 ## [`gh`]
 
+The structure of this repository is such that it allows for easily installation when using `gh`.
+
 ```bash
 gh extension install btoll/gh-hooker
 ```
@@ -101,12 +103,10 @@ List the installed hooks:
 
 ```bash
 git config --local --get-all hooks.pre-commit.hook
-ggshield.sh
 go-fmt.sh
+golangci-lint.sh
+gosec.sh
 go-vet.sh
-hadolint.sh
-shellcheck.sh
-trivy.sh
 ```
 
 List the installed scripts:
@@ -153,6 +153,5 @@ ggshield install [OPTIONS]
 ```
 
 [ggshield install](https://docs.gitguardian.com/ggshield-docs/reference/install)
-
 [`gh`]: https://cli.github.com/
 

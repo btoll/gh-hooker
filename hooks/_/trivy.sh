@@ -9,5 +9,5 @@ umask 0022
 # 1 = program
 # 2 = regex to get changed files
 # 3 = subcommand (if different from program)
-verify shellcheck "\.bash$|\.sh$" "--shell bash"
+verify_changed trivy ".*" "fs --scanners misconfig,license,secret,vuln --severity HIGH,CRITICAL --exit-code 1"
 

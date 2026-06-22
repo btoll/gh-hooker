@@ -9,5 +9,6 @@ umask 0022
 # 1 = program
 # 2 = regex to get changed files
 # 3 = subcommand (if different from program)
-verify trivy ".*" "fs --scanners misconfig,license,secret,vuln --severity HIGH,CRITICAL --exit-code 1"
+verify_changed hadolint "Dockerfile.*"
+#FILES=$(git diff-index --cached --name-only HEAD 2> /dev/null | grep -i "Dockerfile.*")
 
