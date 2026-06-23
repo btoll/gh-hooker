@@ -2,6 +2,7 @@
 # shellcheck disable=1091
 
 . "$(git rev-parse --show-toplevel)/.git/hooks/pre-commit.d/f.sh"
+. "$HOME/.local/share/git-hooks-and-extensions/colors.sh"
 
 # Try for local hooks first.
 HOOKS=$(git config --local --get-all hooks.pre-commit.hook)

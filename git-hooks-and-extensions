@@ -10,7 +10,7 @@ then
     GH_DIR="$HOME/.local/share/gh/extensions/git-hooks-and-extensions"
 fi
 
-. "$GH_DIR/colors.sh"
+. "$GH_DIR/share/colors.sh"
 
 BINDIR="$HOME/.local/bin/git-hooks-and-extensions"
 mkdir -p "$BINDIR"
@@ -22,7 +22,8 @@ cp -r "$GH_DIR/hooks" "$BINDIR"
 SHARE_DIR="$HOME/.local/share/git-hooks-and-extensions"
 mkdir -p "$SHARE_DIR"
 echo -e "$INFO Installing git bootstrap files into $SHARE_DIR/bootstrap..."
-cp -r "$GH_DIR/bootstrap" "$SHARE_DIR"
+cp -r "$GH_DIR/share/bootstrap" "$SHARE_DIR"
+cp -r "$GH_DIR/share/colors.sh" "$SHARE_DIR"
 
 echo -e "$SUCCESS Installation complete."
 echo -e "$INFO Add $BINDIR/bin to PATH."

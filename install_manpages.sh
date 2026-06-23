@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=1091
 
-. colors.sh
+. ./share/colors.sh
 
 set -euo pipefail
 

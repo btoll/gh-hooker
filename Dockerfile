@@ -7,10 +7,11 @@ RUN apt-get update && \
 WORKDIR /app
 
 COPY bin/ ./bin/
-COPY bootstrap/ ./bootstrap/
+COPY share/bootstrap/ ./share/bootstrap/
+COPY share/colors.sh ./share/
 COPY hooks/ ./hooks/
 COPY man/ ./man/
-COPY colors.sh git-hooks-and-extensions ./
+COPY git-hooks-and-extensions ./
 
 ENTRYPOINT ["./git-hooks-and-extensions"]
 
