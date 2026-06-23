@@ -16,8 +16,8 @@ Args:
 --help,  -h   Help.
 --type,  -t   Comma-separated string of directory names that hold the
               hooks to be installed.
-              Types: go, js, py, _ (misc)\n
---yes,   -y   Answer 'yes' to all installs."
+              Types: go, js, py, _ (misc)
+--yes,   -y   Answer 'yes' to all installs.\n"
 }
 
 install() {

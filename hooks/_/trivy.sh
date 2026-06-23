@@ -5,9 +5,8 @@ set -eo pipefail
 LANG=C
 umask 0022
 
-# Args
-# 1 = program
-# 2 = regex to get changed files
-# 3 = subcommand (if different from program)
-verify_changed trivy ".*" "fs --scanners misconfig,license,secret,vuln --severity HIGH,CRITICAL --exit-code 1"
+# Create an SBOM with vulnerability, et al., information included.
+verify_all trivy "fs . --format cyclonedx --scanners misconfig,license,secret,vuln --output sbom.json --severity CRITICAL --exit-code 1"
+# Now, scan the SBOM for vulnerabilities.
+verify_all trivy "sbom sbom.json -o vuln.table --severity CRITICAL --exit-code 1"
 

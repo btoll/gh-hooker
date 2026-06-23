@@ -3,4 +3,6 @@ PROJECT_NAME
 *.out
 *~
 *.log
+sbom.json
+vuln.table
 
