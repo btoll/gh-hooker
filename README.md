@@ -2,11 +2,13 @@
 
 - [About](#about)
     + [`git-init-wrapper`](#git-init-wrapper)
-    + [`git-hooks`](#git-hooks)
     + [`git-bootstrap`](#git-bootstrap)
+    + [`git-hooks`](#git-hooks)
+    + [`git-hub`](#git-hub)
+    + [`git-ls`](#git-ls)
 - [Installation](#installation)
     + [`podman`](#podman)
-    + [`tar`](#tar)
+    + [`git clone`](#git-clone)
     + [`gh`](#gh)
 - [Usage](#Usage)
 
@@ -14,33 +16,30 @@
 
 # About
 
-This extension provides three custom Git extensions:
+This extension provides a number of custom Git extensions:
 
 - `git-init-wrapper`
-- `git-hooks`
 - `git-bootstrap`
+- `git-hooks`
+- `git-hub`
+- `git-ls`
 
 ## `git-init-wrapper`
 
-Use this extension when a Git repository should be initialized.  It will do the following things:
+A wrapper around `git init` that also optionally installs git pre-commit hooks and bootstrap files.
 
 - Initialize the new repository (`git-init`).
 - Install pre-defined bootstrap files that should be copied into each new repository.
 - Optionally install one or more groups of Git hooks scripts, defined by language:
     + `go`
-    + `js`
     + `python`
+    + `js`
     + `_`
         - This is a catch-all.
-    + Each group contains symlinks to security tools such as [`ggshield`](https://github.com/GitGuardian/ggshield) and [`Trivy`](https://github.com/aquasecurity/trivy).
-
-## `git-hooks`
-
-Use this extension when installing Git hooks into an existing repository.
 
 ## `git-bootstrap`
 
-Use this extension when installing bootstrap files into an existing repository.  It will install the following files:
+Copy every file in $HOME/.local/share/git-hooks-and-extensions/bootstrap into the git project directory.  Currently, it will install the following files:
 
 - `README.md`
 - `LICENSE`
@@ -48,31 +47,61 @@ Use this extension when installing bootstrap files into an existing repository. 
 
 Note that several of the files contain the placeholder `PROJECT_NAME`, which will be replaced by the project name.
 
+## `git-hooks`
+
+Use this extension when installing Git hooks into an existing repository.
+
+## `git-hub`
+
+Open any file, directory or commit on GitHub in regular view or blame view.
+
+## `git-ls`
+
+List the files that are staged and modified or that make up any given commit and optionally open in Vim for editing.
+
+For example:
+
+- Open all the files that made up the previous commit in buffers in Vim:
+
+```bash
+$ git ls -e
+```
+
+- List the files that are in the staged area and are modified in the workspace:
+
+```bash
+$ git ls -e
+```
+
+- And, open them in Vim:
+
+```bash
+$ git ls --dirty -e
+```
+
+Add a useful alias:
+
+```bash
+alias dirty=git ls --dirty -e
+```
+
+Weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+
 # Installation
 
-## `podman`
+## [`podman`]
 
 ```bash
 podman run --rm -v "$HOME/.local":/root/.local docker.io/btoll/git-hooks-and-extensions:latest
 ```
 
-## `tar`
-
-Create the tarball:
+## `git-clone`
 
 ```bash
-tar -cjf git-hooks-and-extensions_0.1.0.bz2 --exclude .git git-hooks-and-extensions
-```
-
-Unpack:
-
-```bash
-tar -xjf git-hooks-and-extensions_0.1.0.bz2
-cd git-hooks-and-extensions
-mkdir -p "$HOME"/.local/{bin,share}/git-hooks-and-extensions
-cp -r {bin,hooks} "$HOME"/.local/bin/git-hooks-and-extensions/
-cp -r bootstrap "$HOME"/.local/share/git-hooks-and-extensions/
-export PATH="$PATH":"$HOME"/.local/bin/git-hooks-and-extensions/bin
+$ git clone git@github.com:btoll/git-hooks-and-extensions.git
+$ cd git-hooks-and-extensions
+$ ./git-hooks-and-extensions
+$ export PATH="$PATH":"$HOME"/.local/bin/git-hooks-and-extensions/bin
 ```
 
 ## [`gh`]
@@ -152,6 +181,9 @@ Note that `ggshield` can install its own `pre-commmit` hook:
 ggshield install [OPTIONS]
 ```
 
-[ggshield install](https://docs.gitguardian.com/ggshield-docs/reference/install)
+[`podman`]: https://podman.io/
 [`gh`]: https://cli.github.com/
+[ggshield install]: https://docs.gitguardian.com/ggshield-docs/reference/install
+[`ggshield`]: https://github.com/GitGuardian/ggshield
+[`Trivy`]: https://github.com/aquasecurity/trivy
 

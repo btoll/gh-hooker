@@ -5,10 +5,17 @@ set -euo pipefail
 
 GH_DIR=.
 
-if type -p gh
+if [ "$(basename "${BASH_SOURCE[0]}")" != git-hooks-and-extensions ]
 then
-    GH_DIR="$HOME/.local/share/gh/extensions/git-hooks-and-extensions"
+    if type -p gh
+    then
+        GH_DIR="$HOME/.local/share/gh/extensions/git-hooks-and-extensions"
+    else
+        echo -e "$ERROR Unknown executable."
+        exit 1
+    fi
 fi
+
 
 . "$GH_DIR/share/colors.sh"
 
@@ -23,7 +30,17 @@ SHARE_DIR="$HOME/.local/share/git-hooks-and-extensions"
 mkdir -p "$SHARE_DIR"
 echo -e "$INFO Installing git bootstrap files into $SHARE_DIR/bootstrap..."
 cp -r "$GH_DIR/share/bootstrap" "$SHARE_DIR"
-cp -r "$GH_DIR/share/colors.sh" "$SHARE_DIR"
+cp "$GH_DIR/share/colors.sh" "$SHARE_DIR"
+
+MANDIR=/usr/share/man/man1
+echo -e "$INFO Installing git man pages into $MANDIR..."
+if [ $EUID -ne 0 ]
+then
+    sudo cp "$GH_DIR"/man/*.1 "$MANDIR"
+else
+    # When installig using a container, we don't need `sudo` as it runs as `root`.
+    cp "$GH_DIR"/man/*.1 "$MANDIR"
+fi
 
 echo -e "$SUCCESS Installation complete."
 echo -e "$INFO Add $BINDIR/bin to PATH."
