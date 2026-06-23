@@ -273,7 +273,7 @@ It is basically a wrapper for ```git log -S``` and returns the same results, how
 
           Hash (short)    ->  6449ce9
           Author name     ->  Benjamin Toll
-          Author email    ->  benjam72@yahoo.com
+          Author email    ->  ben@benjamintoll.com
           Commit message  ->  Ensure column filter menu is destroyed when adding new column filters.
           Merge date      ->  Mon Nov 24 13:27:27 2014 -0500
           Url             ->  https://github.com/extjs/SDK/commit/6449ce9

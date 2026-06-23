@@ -9,7 +9,7 @@
 - [Installation](#installation)
     + [`podman`](#podman)
     + [`git clone`](#git-clone)
-    + [`gh`](#gh)
+- [Man Pages](#man-pages)
 - [Usage](#Usage)
 
 ---
@@ -104,21 +104,19 @@ $ ./git-hooks-and-extensions
 $ export PATH="$PATH":"$HOME"/.local/bin/git-hooks-and-extensions/bin
 ```
 
-## [`gh`]
+# Man Pages
 
-The structure of this repository is such that it allows for easily installation when using `gh`.
-
-```bash
-gh extension install btoll/git-hooks-and-extensions
-```
+To manually generate all of the man pages in `man/`, run the following command:
 
 ```bash
-git-hooks-and-extensions
+$ cd man
+$ for filename in *.md; do go-md2man -in $filename -out "$HOME"/.local/share/man/man1/${filename%.*}.1; done
 ```
 
-This will copy custom Git extensions and Git hooks to `$HOME/.local/bin/git-hooks-and-extensions`.  In addition, files that are common to all repositories of an organization are copied to `$HOME/.local/share/git-hooks-and-extensions`.
-
-The hooks are configured locally.  The global `.gitconfig` is untouched.
+> To install [`go-md2man`]:
+> ```bash
+> $ go install github.com/cpuguy83/go-md2man/v2@latest
+> ```
 
 # Usage
 
@@ -186,4 +184,5 @@ ggshield install [OPTIONS]
 [ggshield install]: https://docs.gitguardian.com/ggshield-docs/reference/install
 [`ggshield`]: https://github.com/GitGuardian/ggshield
 [`Trivy`]: https://github.com/aquasecurity/trivy
+[`go-md2man`]: https://github.com/cpuguy83/go-md2man
 

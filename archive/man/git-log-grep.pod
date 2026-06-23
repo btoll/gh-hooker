@@ -21,7 +21,7 @@ The found matches will be in the following format (to STDOUT):
 
 	Hash (short)    ->  6449ce9
 	Author name     ->  Benjamin Toll
-	Author email    ->  benjam72@yahoo.com
+	Author email    ->  ben@benjamintoll.com
 	Commit message  ->  Ensure column filter menu is destroyed when adding new column filters.
 	Merge date      ->  Mon Nov 24 13:27:27 2014 -0500
 	Url             ->  https://github.com/extjs/SDK/commit/6449ce9
@@ -40,5 +40,5 @@ git grep -p getDragData -l dd | tee my_search_results
 
 =head1 AUTHOR
 
-Benjamin Toll <benjam72@yahoo.com>
+Benjamin Toll <ben@benjamintoll.com>
 

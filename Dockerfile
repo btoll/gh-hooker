@@ -1,11 +1,8 @@
-FROM debian:bookworm-slim
+FROM golang:1.25.11-trixie
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git && \
-    rm -rf /etc/apt/lists/*
+RUN go install github.com/cpuguy83/go-md2man/v2@latest
 
 WORKDIR /app
-
 COPY bin/ ./bin/
 COPY share/bootstrap/ ./share/bootstrap/
 COPY share/colors.sh ./share/

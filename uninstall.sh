@@ -5,18 +5,20 @@
 
 set -euo pipefail
 
-echo -e "$INFO Removing symbolic links for git extensions..."
-echo -e "$INFO Removing symbolic links for git bootstrap files..."
-rm -rf "$HOME"/.local/{bin,share}/git-hooks-and-extensions
+echo -e "$INFO Removing links for git extensions, hooks and bootstrap files..."
+rm -rf "$HOME"/.local/bin/git-hooks-and-extensions
+rm -rf "$HOME"/.local/share/git-hooks-and-extensions
 
-MANDIR=/usr/share/man/man1
-echo -e "$INFO Removing git man pages..."
-sudo rm -f "$MANDIR/git-bootstrap.1"
-sudo rm -f "$MANDIR/git-cleanup.1"
-sudo rm -f "$MANDIR/git-init-wrapper.1"
-sudo rm -f "$MANDIR/git-hub.1"
-sudo rm -f "$MANDIR/git-ls.1"
-sudo rm -f "$MANDIR/git-package-and-install.1"
+MANDIR="$HOME"/.local/share/man/man1
+if [ -d "$MANDIR" ]
+then
+    echo -e "$INFO Removing git man pages..."
+    rm -f "$MANDIR/git-bootstrap.1"
+    rm -f "$MANDIR/git-hooks.1"
+    rm -f "$MANDIR/git-hub.1"
+    rm -f "$MANDIR/git-init-wrapper.1"
+    rm -f "$MANDIR/git-ls.1"
+fi
 
 echo -e "$SUCCESS Uninstall complete."
 

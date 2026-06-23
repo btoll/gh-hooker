@@ -15,7 +15,6 @@ then
         echo "This is needed to fetch the requisite global pre-commit hook."
         exit 1
     fi
-
     HOOKS=$(git config --global --get-all hooks.pre-commit."$PROJECT")
 fi
 

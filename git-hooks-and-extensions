@@ -32,16 +32,24 @@ echo -e "$INFO Installing git bootstrap files into $SHARE_DIR/bootstrap..."
 cp -r "$GH_DIR/share/bootstrap" "$SHARE_DIR"
 cp "$GH_DIR/share/colors.sh" "$SHARE_DIR"
 
-MANDIR=/usr/share/man/man1
-echo -e "$INFO Installing git man pages into $MANDIR..."
-if [ $EUID -ne 0 ]
+echo -e "$WARN Add $BINDIR/bin to PATH."
+
+if command -v go-md2man > /dev/null
 then
-    sudo cp "$GH_DIR"/man/*.1 "$MANDIR"
+    MANDIR="$HOME/.local/share/man/man1"
+    mkdir -p "$MANDIR"
+    echo -e "$INFO Installing git extension man pages into $MANDIR..."
+    for filename in "$GH_DIR"/man/*.md
+    do
+        file="$(basename "$filename")"
+        go-md2man -in "$filename" -out "$MANDIR/${file%.*}".1
+    done
+    echo -e "$WARN Add $HOME/.local/share/man to MANPATH."
 else
-    # When installig using a container, we don't need `sudo` as it runs as `root`.
-    cp "$GH_DIR"/man/*.1 "$MANDIR"
+    echo -e "$WARN Man pages were not installed because \`go-md2man\` was not found in PATH."
+    echo -e "$WARN To install:"
+    echo -e "$WARN \t\tgo install github.com/cpuguy83/go-md2man/v2@latest"
 fi
 
 echo -e "$SUCCESS Installation complete."
-echo -e "$INFO Add $BINDIR/bin to PATH."
 

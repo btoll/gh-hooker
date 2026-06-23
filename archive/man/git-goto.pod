@@ -18,5 +18,5 @@ git goto extjs5.1.0
 
 =head1 AUTHOR
 
-Benjamin Toll <benjam72@yahoo.com>
+Benjamin Toll <ben@benjamintoll.com>
 
